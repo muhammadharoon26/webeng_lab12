@@ -24,10 +24,39 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(LoginRequest $request): RedirectResponse
     {
+        // 1. Standard Breeze Authentication
         $request->authenticate();
-
         $request->session()->regenerate();
 
+        // ==========================================
+        // 2. LAB TASK: Automatic Session Creation
+        // ==========================================
+        
+        $user = Auth::user();
+
+        // A. Create Basic Session Variables
+        session([
+            'username'        => $user->name,
+            'role'            => 'Administrator', // Static for now, or fetch from DB if you added roles
+            'last_login_time' => \Carbon\Carbon::now()->toDayDateTimeString(),
+            'login_counter'   => session('login_counter', 0) + 1, // Increment count for this browser session
+        ]);
+
+        // B. Create Associative Array for Academic Data
+        $academicData = [
+            'course'   => 'Web Engineering',
+            'semester' => '5th Semester',
+            'year'     => '2025'
+        ];
+
+        // C. Convert Array to JSON using json_encode()
+        $jsonPayload = json_encode($academicData);
+
+        // D. Store JSON in Session
+        session(['academic_data_json' => $jsonPayload]);
+
+        // ==========================================
+        
         return redirect()->intended(route('dashboard', absolute: false));
     }
 
